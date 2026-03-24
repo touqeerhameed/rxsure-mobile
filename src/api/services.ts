@@ -65,10 +65,11 @@ export async function getPatientBookings(token: string, businessId: string, pati
 }
 
 export async function getBookingDetails(token: string, bookingId: string): Promise<Booking> {
-  return frappeClient.call(`${API}.get_booking_details`, {
+  const result = await frappeClient.call(`${API}.get_booking_details`, {
     token,
     booking_id: bookingId,
   });
+  return (result as any)?.booking || result;
 }
 
 export async function cancelBooking(token: string, bookingId: string, reason?: string): Promise<any> {
