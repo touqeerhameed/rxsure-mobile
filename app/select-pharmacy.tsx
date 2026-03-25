@@ -27,7 +27,7 @@ interface Pharmacy {
 
 export default function SelectPharmacyScreen() {
   const router = useRouter();
-  const { setOrganization } = useAuthStore();
+  const { organization, setOrganization } = useAuthStore();
   const [pharmacies, setPharmacies] = useState<Pharmacy[]>([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
@@ -82,6 +82,30 @@ export default function SelectPharmacyScreen() {
         <Text style={styles.headerSubtitle}>
           Book consultations with qualified pharmacists
         </Text>
+
+        {/* Login link */}
+        <TouchableOpacity
+          style={styles.loginLink}
+          onPress={() => {
+            // If pharmacy already selected (from previous session), go to login
+            if (organization) {
+              router.push('/login');
+            } else if (filtered.length === 1) {
+              // Only one pharmacy — auto-select and go to login
+              setOrganization(filtered[0].id);
+              router.push('/login');
+            } else {
+              // Select first pharmacy as default
+              if (filtered.length > 0) {
+                setOrganization(filtered[0].id);
+                router.push('/login');
+              }
+            }
+          }}
+        >
+          <Feather name="log-in" size={14} color="#fff" />
+          <Text style={styles.loginLinkText}>Already have an account? <Text style={{ fontWeight: '700' }}>Login</Text></Text>
+        </TouchableOpacity>
 
         {/* Search */}
         <View style={styles.searchBox}>
@@ -217,6 +241,11 @@ const styles = StyleSheet.create({
     borderRadius: RADIUS.full, marginBottom: SPACING.md,
   },
   headerBadgeText: { color: '#fff', fontSize: FONT_SIZE.xs, fontWeight: '600' },
+  loginLink: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+    marginBottom: SPACING.lg, paddingVertical: SPACING.sm,
+  },
+  loginLinkText: { color: 'rgba(255,255,255,0.9)', fontSize: FONT_SIZE.sm },
   headerTitle: {
     fontSize: 26, fontWeight: '700', color: '#fff',
     textAlign: 'center', lineHeight: 32, marginBottom: SPACING.sm,

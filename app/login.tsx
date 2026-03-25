@@ -12,7 +12,7 @@ import { COLORS, SPACING, FONT_SIZE, RADIUS } from '../src/utils/constants';
 export default function LoginScreen() {
   const router = useRouter();
   const { login, isLoading, error, clearError, organization, setOrganization } = useAuthStore();
-  const { isAvailable, isEnabled, biometricType, authenticate } = useBiometric();
+  const { isAvailable, isEnabled, biometricType, authenticate, storeCredentials } = useBiometric();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -26,12 +26,20 @@ export default function LoginScreen() {
   }, [isAvailable, isEnabled]);
 
   const handleBiometricLogin = async () => {
-    const success = await authenticate();
-    if (success) {
-      const { checkAuthStatus } = useAuthStore.getState();
-      const valid = await checkAuthStatus();
-      if (valid) {
+    const credentials = await authenticate();
+    if (credentials) {
+      try {
+        // Set organization and login with stored credentials
+        const { setOrganization } = useAuthStore.getState();
+        setOrganization(credentials.organization);
+        const result = await login(credentials.email, credentials.password);
+        if (result?.requires_2fa) {
+          router.push({ pathname: '/verify-otp', params: { email: credentials.email } });
+          return;
+        }
         router.replace('/(tabs)/home');
+      } catch {
+        // Stored credentials might be outdated — fall back to manual login
       }
     }
   };
@@ -53,6 +61,11 @@ export default function LoginScreen() {
       if (result?.requires_2fa) {
         router.push({ pathname: '/verify-otp', params: { email: email.trim() } });
         return;
+      }
+
+      // Store credentials for biometric login
+      if (isAvailable && organization) {
+        await storeCredentials({ email: email.trim(), password, organization });
       }
 
       router.replace('/(tabs)/home');

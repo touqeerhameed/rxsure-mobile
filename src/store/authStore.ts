@@ -123,7 +123,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       if (token) await logoutPatient(token);
     } catch {}
     await storage.remove('patient_token');
-    await storage.remove('biometric_enabled');
+    // Keep biometric settings — they should persist across logout/login
     set({
       patient: null,
       token: null,

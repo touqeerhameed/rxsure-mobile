@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, KeyboardAvoidingView, ScrollView, Platform } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useAuthStore } from '../src/store/authStore';
 import { verifyPatientOtp, resendPatientOtp } from '../src/api/services';
@@ -63,7 +63,7 @@ export default function VerifyOtpScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={{ flex: 1, backgroundColor: COLORS.white }} contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
       <Text style={styles.title}>Enter Verification Code</Text>
       <Text style={styles.subtitle}>We sent a 6-digit code to{'\n'}{email}</Text>
 
@@ -97,12 +97,12 @@ export default function VerifyOtpScreen() {
           {!resending && <Text style={styles.resendLink}>Resend</Text>}
         </Text>
       </TouchableOpacity>
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.white, padding: SPACING.xxl, justifyContent: 'center' },
+  container: { flexGrow: 1, backgroundColor: COLORS.white, padding: SPACING.xxl, paddingTop: 60 },
   title: { fontSize: FONT_SIZE.xxl, fontWeight: '700', color: COLORS.slate900, textAlign: 'center' },
   subtitle: { fontSize: FONT_SIZE.base, color: COLORS.slate500, textAlign: 'center', marginTop: SPACING.sm, marginBottom: SPACING.xxxl },
   otpRow: { flexDirection: 'row', justifyContent: 'center', gap: SPACING.md, marginBottom: SPACING.xxxl },

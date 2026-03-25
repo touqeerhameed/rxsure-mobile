@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, Switch, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, Switch, ScrollView, Alert, Platform } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useBiometric } from '../src/hooks/useBiometric';
 import { useSettingsStore } from '../src/store/settingsStore';
@@ -10,8 +10,18 @@ export default function SettingsScreen() {
   const { notificationsEnabled, setNotificationsEnabled } = useSettingsStore();
 
   const toggleBiometric = async (value: boolean) => {
-    if (value) await enableBiometric();
-    else await disableBiometric();
+    if (value) {
+      const success = await enableBiometric();
+      if (success) {
+        if (Platform.OS === 'web') alert(`${biometricType} login enabled!`);
+        else Alert.alert('Success', `${biometricType} login enabled!`);
+      } else {
+        if (Platform.OS === 'web') alert('Could not enable biometric. Please login first.');
+        else Alert.alert('Failed', 'Could not enable biometric. Please login first.');
+      }
+    } else {
+      await disableBiometric();
+    }
   };
 
   return (

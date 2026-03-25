@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Platform } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Platform, KeyboardAvoidingView, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { useAuthStore } from '../src/store/authStore';
@@ -20,6 +20,8 @@ export default function ResetPasswordScreen() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const showError = (msg: string) => setError(msg);
 
@@ -83,7 +85,7 @@ export default function ResetPasswordScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={{ flex: 1, backgroundColor: COLORS.white }} contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
       {/* Step indicator */}
       <View style={styles.steps}>
         {['Email', 'Verify', 'New Password'].map((label, i) => {
@@ -150,13 +152,25 @@ export default function ResetPasswordScreen() {
           <Text style={styles.subtitle}>Choose a strong password (min 8 characters)</Text>
           <View style={styles.inputGroup}>
             <Text style={styles.label}>New Password</Text>
-            <TextInput style={styles.input} value={newPassword} onChangeText={setNewPassword}
-              placeholder="Min 8 characters" placeholderTextColor={COLORS.slate400} secureTextEntry />
+            <View style={styles.inputWithIcon}>
+              <Feather name="lock" size={18} color={COLORS.slate400} style={{ marginLeft: SPACING.lg }} />
+              <TextInput style={styles.inputInner} value={newPassword} onChangeText={setNewPassword}
+                placeholder="Min 8 characters" placeholderTextColor={COLORS.slate400} secureTextEntry={!showNewPassword} />
+              <TouchableOpacity onPress={() => setShowNewPassword(!showNewPassword)} style={{ padding: SPACING.lg }}>
+                <Feather name={showNewPassword ? 'eye-off' : 'eye'} size={18} color={COLORS.slate400} />
+              </TouchableOpacity>
+            </View>
           </View>
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Confirm Password</Text>
-            <TextInput style={styles.input} value={confirmPassword} onChangeText={setConfirmPassword}
-              placeholder="Re-enter password" placeholderTextColor={COLORS.slate400} secureTextEntry />
+            <View style={styles.inputWithIcon}>
+              <Feather name="lock" size={18} color={COLORS.slate400} style={{ marginLeft: SPACING.lg }} />
+              <TextInput style={styles.inputInner} value={confirmPassword} onChangeText={setConfirmPassword}
+                placeholder="Re-enter password" placeholderTextColor={COLORS.slate400} secureTextEntry={!showConfirmPassword} />
+              <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)} style={{ padding: SPACING.lg }}>
+                <Feather name={showConfirmPassword ? 'eye-off' : 'eye'} size={18} color={COLORS.slate400} />
+              </TouchableOpacity>
+            </View>
           </View>
           <TouchableOpacity style={[styles.button, loading && styles.buttonDisabled]} onPress={handleResetPassword} disabled={loading}>
             {loading ? <ActivityIndicator color={COLORS.white} /> : <Text style={styles.buttonText}>Reset Password</Text>}
@@ -167,12 +181,12 @@ export default function ResetPasswordScreen() {
       <TouchableOpacity onPress={() => router.back()} style={{ marginTop: SPACING.xxl, alignItems: 'center' }}>
         <Text style={styles.linkText}>Back to Login</Text>
       </TouchableOpacity>
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.white, padding: SPACING.xxl, justifyContent: 'center' },
+  container: { flexGrow: 1, backgroundColor: COLORS.white, padding: SPACING.xxl, paddingTop: 40, paddingBottom: 200 },
   steps: { flexDirection: 'row', justifyContent: 'center', gap: SPACING.xl, marginBottom: SPACING.xxxl },
   stepItem: { alignItems: 'center', gap: 4 },
   stepDot: { width: 28, height: 28, borderRadius: 14, backgroundColor: COLORS.slate200, alignItems: 'center', justifyContent: 'center' },
@@ -187,6 +201,14 @@ const styles = StyleSheet.create({
   errorText: { color: COLORS.red, fontSize: FONT_SIZE.sm },
   inputGroup: { marginBottom: SPACING.lg },
   label: { fontSize: FONT_SIZE.sm, fontWeight: '600', color: COLORS.slate700, marginBottom: SPACING.sm },
+  inputWithIcon: {
+    flexDirection: 'row', alignItems: 'center',
+    borderWidth: 1, borderColor: COLORS.slate200, borderRadius: RADIUS.md, backgroundColor: COLORS.slate50,
+  },
+  inputInner: {
+    flex: 1, paddingHorizontal: SPACING.md, paddingVertical: 14,
+    fontSize: FONT_SIZE.base, color: COLORS.slate800,
+  },
   input: {
     borderWidth: 1, borderColor: COLORS.slate200, borderRadius: RADIUS.md,
     paddingHorizontal: SPACING.lg, paddingVertical: 14, fontSize: FONT_SIZE.base,
