@@ -201,6 +201,105 @@ export async function uploadFile(
   );
 }
 
+// ─── Help & Support ─────────────────────────────────────
+const HELP_API = 'consultation.consultation.api.help_feedback_api';
+
+export async function submitSupportTicket(token: string, data: {
+  category: string;
+  subject: string;
+  description: string;
+}): Promise<any> {
+  return frappeClient.call(`${HELP_API}.submit_support_ticket`, { token, ...data });
+}
+
+export async function getMyTickets(
+  token: string, status?: string, page?: number, page_size?: number
+): Promise<any> {
+  return frappeClient.call(`${HELP_API}.get_my_tickets`, { token, status, page, page_size });
+}
+
+export async function getTicketDetail(token: string, ticketId: string): Promise<any> {
+  return frappeClient.call(`${HELP_API}.get_ticket_detail`, { token, ticket_id: ticketId });
+}
+
+export async function replyToTicket(token: string, ticketId: string, message: string, attachments?: any[]): Promise<any> {
+  return frappeClient.call(`${HELP_API}.reply_to_ticket`, {
+    token, ticket_id: ticketId, message,
+    ...(attachments && attachments.length > 0 ? { attachments: JSON.stringify(attachments) } : {}),
+  });
+}
+
+export async function submitGDPRRequest(token: string, data: {
+  request_type: string;
+  details?: string;
+}): Promise<any> {
+  return frappeClient.call(`${HELP_API}.submit_gdpr_request`, { token, ...data });
+}
+
+export async function getMyGDPRRequests(token: string): Promise<any> {
+  return frappeClient.call(`${HELP_API}.get_my_gdpr_requests`, { token });
+}
+
+export async function submitFeedback(token: string, data: {
+  rating: number;
+  category?: string;
+  message: string;
+}): Promise<any> {
+  return frappeClient.call(`${HELP_API}.submit_feedback`, {
+    token,
+    rating: data.rating,
+    feedback_text: data.message,
+  });
+}
+
+export async function getFeedbackHistory(token: string): Promise<any> {
+  return frappeClient.call(`${HELP_API}.get_my_feedback`, { token });
+}
+
+export async function getGDPRRequestDetail(token: string, requestId: string): Promise<any> {
+  return frappeClient.call(`${HELP_API}.get_gdpr_request_detail`, { token, request_id: requestId });
+}
+
+export async function markTicketResolved(token: string, ticketId: string): Promise<any> {
+  return frappeClient.call(`${HELP_API}.mark_ticket_resolved`, { token, ticket_id: ticketId });
+}
+
+export async function getPrivateFile(fileUrl: string): Promise<string | null> {
+  try {
+    const result = await frappeClient.call(
+      'consultation.consultation.api.file_upload_api.patient_get_private_file',
+      { file_url: fileUrl }
+    );
+    if (result?.success && result?.file_data) {
+      return `data:${result.content_type || 'image/png'};base64,${result.file_data}`;
+    }
+    return null;
+  } catch { return null; }
+}
+
+export async function uploadTicketFile(token: string, fileBase64: string, fileName: string, ticketId?: string): Promise<any> {
+  const base64Data = fileBase64.includes(',') ? fileBase64.split(',')[1] : fileBase64;
+  return frappeClient.callWithTimeout(`${HELP_API}.upload_ticket_file`, {
+    token, file_data: base64Data, file_name: fileName, ticket_id: ticketId,
+  }, 300000);
+}
+
+export async function getNotifications(token: string, params?: {
+  page?: number;
+  page_size?: number;
+  unread_only?: boolean;
+}): Promise<any> {
+  return frappeClient.call(`${HELP_API}.get_notifications`, { token, ...params });
+}
+
+export async function markNotificationRead(token: string, notificationId: string): Promise<any> {
+  return frappeClient.call(`${HELP_API}.mark_notification_read`, { token, notification_id: notificationId });
+}
+
+export async function markAllNotificationsRead(token: string): Promise<any> {
+  return frappeClient.call(`${HELP_API}.mark_all_notifications_read`, { token });
+}
+
 // ─── Branding ────────────────────────────────────────────
 export async function getBusinessBranding(businessId: string): Promise<Branding> {
   return frappeClient.call(`${API}.get_business_branding`, { business_id: businessId });

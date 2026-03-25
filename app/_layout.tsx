@@ -50,6 +50,16 @@ export default function RootLayout() {
           <Stack.Screen name="booking/[id]" options={{ title: 'Booking Details' }} />
           <Stack.Screen name="questionnaire/[bookingId]" options={{ title: 'Pre-Screening' }} />
           <Stack.Screen name="settings" options={{ title: 'Settings' }} />
+          <Stack.Screen name="help" options={{ title: 'Help & Support' }} />
+          <Stack.Screen name="help/tickets" options={{ title: 'Support Tickets' }} />
+          <Stack.Screen name="help/submit-ticket" options={{ title: 'New Ticket' }} />
+          <Stack.Screen name="help/gdpr" options={{ title: 'Data Privacy' }} />
+          <Stack.Screen name="help/submit-gdpr" options={{ title: 'New Request' }} />
+          <Stack.Screen name="help/feedback" options={{ title: 'Feedback' }} />
+          <Stack.Screen name="help/ticket/[id]" options={{ title: 'Ticket Detail' }} />
+          <Stack.Screen name="help/gdpr/[id]" options={{ title: 'Request Detail' }} />
+          <Stack.Screen name="help/feedback-history" options={{ title: 'Feedback History' }} />
+          <Stack.Screen name="notifications" options={{ title: 'Notifications' }} />
         </Stack>
       </QueryClientProvider>
     </GestureHandlerRootView>

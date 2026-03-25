@@ -93,6 +93,16 @@ export default function ProfileScreen() {
 
       {/* Menu */}
       <View style={styles.section}>
+        <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/notifications' as any)} activeOpacity={0.7}>
+          <Feather name="bell" size={18} color={COLORS.slate600} />
+          <Text style={styles.menuText}>Notifications</Text>
+          <Feather name="chevron-right" size={16} color={COLORS.slate300} />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/help')} activeOpacity={0.7}>
+          <Feather name="help-circle" size={18} color={COLORS.slate600} />
+          <Text style={styles.menuText}>Help & Support</Text>
+          <Feather name="chevron-right" size={16} color={COLORS.slate300} />
+        </TouchableOpacity>
         <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/settings')} activeOpacity={0.7}>
           <Feather name="settings" size={18} color={COLORS.slate600} />
           <Text style={styles.menuText}>Settings</Text>
