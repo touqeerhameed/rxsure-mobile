@@ -14,6 +14,7 @@ export default function ServicesScreen() {
   const { organization } = useAuthStore();
   const [services, setServices] = useState<Service[]>([]);
   const [freeConsultationText, setFreeConsultationText] = useState('');
+  const [showPrice, setShowPrice] = useState(false);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -24,6 +25,7 @@ export default function ServicesScreen() {
       const data = (result as any)?.services || (Array.isArray(result) ? result : []);
       setServices(data);
       setFreeConsultationText((result as any)?.free_consultation_text || '');
+      setShowPrice(!!(result as any)?.show_service_price);
     } catch {} finally {
       setLoading(false);
     }
@@ -123,11 +125,9 @@ export default function ServicesScreen() {
                   <Feather name="phone" size={13} color={COLORS.primary} />
                   <Text style={styles.freeChipText}>{freeConsultationText}</Text>
                 </View>
-              ) : !isFree && item.price != null && item.price > 0 ? (
-                <Text style={styles.price}>{`£${Number(item.price).toFixed(2)}`}</Text>
-              ) : (
-                <Text style={styles.nhsFree}>NHS Free</Text>
-              )}
+              ) : !isFree && showPrice ? (
+                <Text style={styles.price}>{`FROM £${Number(item.price || 0).toFixed(2)}`}</Text>
+              ) : null}
             </View>
             <Feather name="chevron-right" size={18} color={COLORS.slate300} />
           </TouchableOpacity>

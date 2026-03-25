@@ -6,6 +6,7 @@ import { useAuthStore } from '../../src/store/authStore';
 import { getService } from '../../src/api/services';
 import { COLORS, SPACING, FONT_SIZE, RADIUS } from '../../src/utils/constants';
 import type { Service } from '../../src/types';
+import BottomNav from '../../src/components/BottomNav';
 
 export default function ServiceDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -32,6 +33,7 @@ export default function ServiceDetailScreen() {
   }
 
   return (
+    <>
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {/* Pharmacy */}
       <View style={styles.pharmacyRow}>
@@ -54,15 +56,11 @@ export default function ServiceDetailScreen() {
             <Text style={styles.metaText}>{service.service_delivery}</Text>
           </View>
         )}
-        {service.price != null && service.price > 0 ? (
+        {!(service as any).is_free && service.price != null && service.price > 0 ? (
           <View style={styles.metaChip}>
-            <Text style={styles.priceText}>£{Number(service.price).toFixed(2)}</Text>
+            <Text style={styles.priceText}>{`£${Number(service.price).toFixed(2)}`}</Text>
           </View>
-        ) : (
-          <View style={[styles.metaChip, { backgroundColor: COLORS.greenBg }]}>
-            <Text style={[styles.priceText, { color: COLORS.green }]}>NHS Free</Text>
-          </View>
-        )}
+        ) : null}
       </View>
 
       {service.description && (
@@ -81,6 +79,8 @@ export default function ServiceDetailScreen() {
         <Feather name="chevron-right" size={18} color={COLORS.white} />
       </TouchableOpacity>
     </ScrollView>
+    <BottomNav />
+    </>
   );
 }
 
@@ -99,7 +99,7 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: FONT_SIZE.md, fontWeight: '600', color: COLORS.slate800, marginBottom: SPACING.sm },
   description: { fontSize: FONT_SIZE.base, color: COLORS.slate600, lineHeight: 22 },
   bookButton: {
-    backgroundColor: COLORS.navy, borderRadius: RADIUS.md, paddingVertical: 16,
+    backgroundColor: COLORS.primary, borderRadius: RADIUS.md, paddingVertical: 16,
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: SPACING.sm,
   },
   bookButtonText: { color: COLORS.white, fontSize: FONT_SIZE.md, fontWeight: '600' },

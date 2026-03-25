@@ -42,9 +42,11 @@ export default function RootLayout() {
           <Stack.Screen name="reset-password" options={{ title: 'Reset Password', headerBackTitle: 'Back' }} />
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="service/[id]" options={{ title: 'Service Details' }} />
-          <Stack.Screen name="booking/select-time" options={{ title: 'Select Date & Time' }} />
+          <Stack.Screen name="booking/select-time" options={({ route }: any) => ({
+            title: route?.params?.rescheduleId ? 'Reschedule Booking' : 'Select Date & Time'
+          })} />
           <Stack.Screen name="booking/[id]" options={{ title: 'Booking Details' }} />
-          <Stack.Screen name="questionnaire/[bookingId]" options={{ title: 'Questionnaire' }} />
+          <Stack.Screen name="questionnaire/[bookingId]" options={{ title: 'Pre-Screening' }} />
           <Stack.Screen name="settings" options={{ title: 'Settings' }} />
         </Stack>
       </QueryClientProvider>

@@ -82,6 +82,12 @@ export default function LoginScreen() {
 
         {/* Form */}
         <View style={styles.form}>
+          {/* Selected pharmacy */}
+          <View style={styles.selectedPharmacy}>
+            <Feather name="home" size={14} color={COLORS.primary} />
+            <Text style={styles.selectedPharmacyText}>RxSure Pharmacy</Text>
+          </View>
+
           <Text style={styles.title}>Welcome back</Text>
           <Text style={styles.description}>Sign in to manage your bookings</Text>
 
@@ -202,9 +208,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   logo: {
-    width: 180,
-    height: 60,
-    tintColor: '#fff',
+    width: 200,
+    height: 70,
   },
   subtitle: {
     fontSize: FONT_SIZE.md,
@@ -217,8 +222,24 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     paddingHorizontal: SPACING.xxl,
-    paddingTop: SPACING.xxxl,
+    paddingTop: SPACING.xxl,
     paddingBottom: 40,
+  },
+  selectedPharmacy: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: COLORS.primaryBg,
+    alignSelf: 'flex-start',
+    paddingHorizontal: SPACING.md,
+    paddingVertical: 5,
+    borderRadius: RADIUS.full,
+    marginBottom: SPACING.lg,
+  },
+  selectedPharmacyText: {
+    fontSize: FONT_SIZE.sm,
+    fontWeight: '600',
+    color: COLORS.primary,
   },
   title: {
     fontSize: FONT_SIZE.xxl,

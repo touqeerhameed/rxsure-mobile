@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, ActivityIndicator } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { useAuthStore } from '../../src/store/authStore';
 import { getPatientBookings } from '../../src/api/services';
@@ -27,7 +27,9 @@ export default function BookingsScreen() {
     }
   };
 
-  useEffect(() => { loadBookings(); }, [token, organization]);
+  useFocusEffect(
+    useCallback(() => { loadBookings(); }, [token, organization])
+  );
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -110,6 +112,20 @@ export default function BookingsScreen() {
                 <Text style={styles.detailText}>{formatTime(item.booking_time)}</Text>
               </View>
             </View>
+            {/* Pre-screening indicator */}
+            {(item as any).pre_screening_questionnaire ? (
+              (item as any).prescreening_completed || (item as any).prescreening_completed_by_patient ? (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: SPACING.sm }}>
+                  <Feather name="check-circle" size={12} color={COLORS.green} />
+                  <Text style={{ fontSize: FONT_SIZE.xs, color: COLORS.green }}>Pre-screening done</Text>
+                </View>
+              ) : (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: SPACING.sm }}>
+                  <Feather name="clipboard" size={12} color={COLORS.amber} />
+                  <Text style={{ fontSize: FONT_SIZE.xs, color: COLORS.amber }}>Pre-screening required</Text>
+                </View>
+              )
+            ) : null}
             <Feather name="chevron-right" size={18} color={COLORS.slate300} />
           </TouchableOpacity>
         )}

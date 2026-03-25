@@ -157,6 +157,10 @@ export default function RegisterScreen() {
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#f0fdfa', alignSelf: 'flex-start', paddingHorizontal: 12, paddingVertical: 5, borderRadius: 20, marginBottom: 12 }}>
+          <Feather name="home" size={14} color={COLORS.teal} />
+          <Text style={{ fontSize: 12, fontWeight: '600', color: COLORS.teal }}>RxSure Pharmacy</Text>
+        </View>
         <Text style={styles.title}>Create Account</Text>
         <Text style={styles.subtitle}>Join RxSure to book pharmacy consultations</Text>
 

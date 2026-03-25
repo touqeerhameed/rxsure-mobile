@@ -72,22 +72,25 @@ export async function getBookingDetails(token: string, bookingId: string): Promi
   return (result as any)?.booking || result;
 }
 
-export async function cancelBooking(token: string, bookingId: string, reason?: string): Promise<any> {
-  return frappeClient.call(`${API}.cancel_booking`, {
+export async function cancelBooking(token: string, bookingId: string, reason?: string, businessId?: string): Promise<any> {
+  const result = await frappeClient.call(`${API}.cancel_booking`, {
     token,
     booking_id: bookingId,
-    cancellation_reason: reason,
+    business_id: businessId,
+    reason: reason,
   });
+  return result;
 }
 
 export async function rescheduleBooking(
-  token: string, bookingId: string, newDate: string, newTime: string
+  token: string, bookingId: string, newDate: string, newTime: string, businessId?: string
 ): Promise<any> {
   return frappeClient.call(`${API}.reschedule_booking`, {
     token,
     booking_id: bookingId,
     new_date: newDate,
     new_time: newTime,
+    business_id: businessId,
   });
 }
 
@@ -118,8 +121,14 @@ export async function submitPreScreeningAnswers(data: {
   token: string;
   booking_id: string;
   answers: Record<string, any>;
+  business_id?: string;
 }): Promise<any> {
-  return frappeClient.call(`${API}.submit_prescreening_answers`, data);
+  return frappeClient.call(`${API}.submit_prescreening_answers`, {
+    token: data.token,
+    booking_id: data.booking_id,
+    responses: data.answers,
+    business_id: data.business_id,
+  });
 }
 
 // ─── Auth ────────────────────────────────────────────────
@@ -174,6 +183,22 @@ export async function getPatientProfile(token: string) {
 
 export async function updatePatientProfile(token: string, data: Record<string, any>) {
   return frappeClient.call(`${API}.update_patient_profile`, { token, ...data });
+}
+
+// ─── File Upload ─────────────────────────────────────────
+export async function uploadFile(
+  token: string,
+  fileBase64: string,
+  fileName: string,
+  patientId?: string
+): Promise<{ file_url: string }> {
+  // Strip data URI prefix if present
+  const base64Data = fileBase64.includes(',') ? fileBase64.split(',')[1] : fileBase64;
+  return frappeClient.callWithTimeout(
+    'consultation.consultation.api.file_upload_api.upload_file',
+    { file_data: base64Data, file_name: fileName, patient: patientId, token },
+    300000
+  );
 }
 
 // ─── Branding ────────────────────────────────────────────

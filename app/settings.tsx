@@ -3,6 +3,7 @@ import { Feather } from '@expo/vector-icons';
 import { useBiometric } from '../src/hooks/useBiometric';
 import { useSettingsStore } from '../src/store/settingsStore';
 import { COLORS, SPACING, FONT_SIZE, RADIUS } from '../src/utils/constants';
+import BottomNav from '../src/components/BottomNav';
 
 export default function SettingsScreen() {
   const { isAvailable, isEnabled, biometricType, enableBiometric, disableBiometric } = useBiometric();
@@ -14,6 +15,7 @@ export default function SettingsScreen() {
   };
 
   return (
+    <>
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {/* Security */}
       <Text style={styles.sectionTitle}>Security</Text>
@@ -75,6 +77,8 @@ export default function SettingsScreen() {
         </View>
       </View>
     </ScrollView>
+    <BottomNav />
+    </>
   );
 }
 

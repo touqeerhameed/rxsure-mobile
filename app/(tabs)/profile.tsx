@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Platform, Modal } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Platform, Modal, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { useAuthStore } from '../../src/store/authStore';
@@ -63,11 +63,29 @@ export default function ProfileScreen() {
             <Text style={styles.infoText}>{patient.phone}</Text>
           </View>
         )}
+        {patient?.date_of_birth && (
+          <View style={styles.infoRow}>
+            <Feather name="calendar" size={16} color={COLORS.slate400} />
+            <Text style={styles.infoText}>{new Date(patient.date_of_birth).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</Text>
+          </View>
+        )}
+        {patient?.gender && (
+          <View style={styles.infoRow}>
+            <Feather name="user" size={16} color={COLORS.slate400} />
+            <Text style={styles.infoText}>{patient.gender}</Text>
+          </View>
+        )}
+        {(patient as any)?.nhs_number && (
+          <View style={styles.infoRow}>
+            <Feather name="shield" size={16} color={COLORS.slate400} />
+            <Text style={styles.infoText}>NHS: {(patient as any).nhs_number}</Text>
+          </View>
+        )}
         {patient?.address_line_1 && (
           <View style={styles.infoRow}>
             <Feather name="map-pin" size={16} color={COLORS.slate400} />
             <Text style={styles.infoText}>
-              {[patient.address_line_1, patient.city, patient.postcode].filter(Boolean).join(', ')}
+              {[patient.address_line_1, patient.address_line_2, patient.city, patient.postcode].filter(Boolean).join(', ')}
             </Text>
           </View>
         )}
@@ -93,6 +111,11 @@ export default function ProfileScreen() {
         <Text style={styles.logoutText}>Sign Out</Text>
       </TouchableOpacity>
 
+      <Image
+        source={require('../../assets/rxsure-logo.png')}
+        style={styles.footerLogo}
+        resizeMode="contain"
+      />
       <Text style={styles.version}>RxSure v1.0.0</Text>
 
       {/* Logout Confirmation Modal */}
@@ -154,6 +177,7 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: '#fca5a5', marginBottom: SPACING.lg,
   },
   logoutText: { fontSize: FONT_SIZE.base, fontWeight: '600', color: COLORS.red },
+  footerLogo: { width: 120, height: 40, alignSelf: 'center', marginBottom: SPACING.sm },
   version: { textAlign: 'center', fontSize: FONT_SIZE.xs, color: COLORS.slate400, marginBottom: 40 },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: SPACING.xxl },
   modalBox: { backgroundColor: COLORS.white, borderRadius: RADIUS.lg, padding: SPACING.xxl, width: '100%', maxWidth: 340 },

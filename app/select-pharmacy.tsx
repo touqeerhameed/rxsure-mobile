@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
-  TextInput, ActivityIndicator, Linking,
+  TextInput, ActivityIndicator, Linking, Image,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
@@ -69,6 +69,11 @@ export default function SelectPharmacyScreen() {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
+        <Image
+          source={require('../assets/rxsure-logo.png')}
+          style={{ width: 140, height: 45, alignSelf: 'center', marginBottom: SPACING.md }}
+          resizeMode="contain"
+        />
         <View style={styles.headerBadge}>
           <Feather name="check-circle" size={12} color="#fff" />
           <Text style={styles.headerBadgeText}>NHS Approved Services</Text>

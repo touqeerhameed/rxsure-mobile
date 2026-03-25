@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   RefreshControl,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { useAuthStore } from '../../src/store/authStore';
 import { getPatientBookings } from '../../src/api/services';
@@ -36,7 +36,9 @@ export default function HomeScreen() {
     } catch {}
   };
 
-  useEffect(() => { loadBookings(); }, [token, organization]);
+  useFocusEffect(
+    useCallback(() => { loadBookings(); }, [token, organization])
+  );
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -137,6 +139,20 @@ export default function HomeScreen() {
                 <Text style={styles.bookingDetailText}>{formatTime(booking.booking_time)}</Text>
               </View>
             </View>
+            {/* Pre-screening indicator */}
+            {(booking as any).pre_screening_questionnaire ? (
+              (booking as any).prescreening_completed || (booking as any).prescreening_completed_by_patient ? (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: SPACING.sm }}>
+                  <Feather name="check-circle" size={12} color={COLORS.green} />
+                  <Text style={{ fontSize: FONT_SIZE.xs, color: COLORS.green }}>Pre-screening done</Text>
+                </View>
+              ) : (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: SPACING.sm }}>
+                  <Feather name="clipboard" size={12} color={COLORS.amber} />
+                  <Text style={{ fontSize: FONT_SIZE.xs, color: COLORS.amber }}>Pre-screening required</Text>
+                </View>
+              )
+            ) : null}
             <Feather name="chevron-right" size={18} color={COLORS.slate300} style={styles.chevron} />
           </TouchableOpacity>
         ))

@@ -3,17 +3,23 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { useAuthStore } from '../../src/store/authStore';
-import { getAvailableSlots, createBooking } from '../../src/api/services';
+import { getAvailableSlots, createBooking, rescheduleBooking } from '../../src/api/services';
 import { formatDate, formatTime } from '../../src/utils/formatting';
 import { COLORS, SPACING, FONT_SIZE, RADIUS } from '../../src/utils/constants';
 import type { TimeSlot } from '../../src/types';
+import BottomNav from '../../src/components/BottomNav';
 
 export default function SelectTimeScreen() {
-  const { serviceId, serviceName } = useLocalSearchParams<{ serviceId: string; serviceName: string }>();
+  const { serviceId, serviceName, rescheduleId, currentDate, currentTime } = useLocalSearchParams<{
+    serviceId: string; serviceName: string; rescheduleId?: string; currentDate?: string; currentTime?: string;
+  }>();
   const router = useRouter();
   const { token, organization, patient } = useAuthStore();
+  const isReschedule = !!rescheduleId;
 
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState(
+    currentDate ? new Date(currentDate) : new Date()
+  );
   const [slots, setSlots] = useState<TimeSlot[]>([]);
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -51,16 +57,21 @@ export default function SelectTimeScreen() {
     setBooking(true);
     setBookError('');
     try {
-      const result = await createBooking({
-        service_id: serviceId!,
-        booking_date: dateStr,
-        booking_time: selectedSlot,
-        business_id: organization,
-        patient_id: (patient as any)?.id || patient?.name,
-        delivery_type: 'In Person',
-      });
+      let result: any;
+      if (isReschedule) {
+        result = await rescheduleBooking(token!, rescheduleId!, dateStr, selectedSlot, organization);
+      } else {
+        result = await createBooking({
+          service_id: serviceId!,
+          booking_date: dateStr,
+          booking_time: selectedSlot,
+          business_id: organization,
+          patient_id: (patient as any)?.id || patient?.name,
+          delivery_type: 'In Person',
+        });
+      }
       if ((result as any)?.success === false) {
-        setBookError((result as any)?.error || 'Booking failed');
+        setBookError((result as any)?.error || (isReschedule ? 'Reschedule failed' : 'Booking failed'));
         setBooking(false);
         return;
       }
@@ -82,31 +93,35 @@ export default function SelectTimeScreen() {
   // Success screen
   if (booked) {
     return (
-      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center', padding: SPACING.xxl }]}>
-        <Feather name="check-circle" size={64} color={COLORS.primary} />
-        <Text style={{ fontSize: FONT_SIZE.xxl, fontWeight: '700', color: COLORS.slate900, marginTop: SPACING.xl, textAlign: 'center' }}>
-          Booking Confirmed!
-        </Text>
-        <Text style={{ fontSize: FONT_SIZE.base, color: COLORS.slate500, marginTop: SPACING.sm, textAlign: 'center' }}>
-          {serviceName} on {formatDate(dateStr)} at {formatTime(selectedSlot!)}
-        </Text>
-        <TouchableOpacity
-          style={[styles.bookBtn, { marginTop: SPACING.xxxl, width: '100%' }]}
-          onPress={() => router.replace('/(tabs)/bookings')}
-        >
-          <Text style={styles.bookBtnText}>View My Bookings</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={{ marginTop: SPACING.lg }}
-          onPress={() => router.replace('/(tabs)/home')}
-        >
-          <Text style={{ fontSize: FONT_SIZE.base, color: COLORS.blue, fontWeight: '500' }}>Back to Home</Text>
-        </TouchableOpacity>
-      </View>
+      <>
+        <View style={[styles.container, { justifyContent: 'center', alignItems: 'center', padding: SPACING.xxl }]}>
+          <Feather name="check-circle" size={64} color={COLORS.primary} />
+          <Text style={{ fontSize: FONT_SIZE.xxl, fontWeight: '700', color: COLORS.slate900, marginTop: SPACING.xl, textAlign: 'center' }}>
+            {isReschedule ? 'Booking Rescheduled!' : 'Booking Confirmed!'}
+          </Text>
+          <Text style={{ fontSize: FONT_SIZE.base, color: COLORS.slate500, marginTop: SPACING.sm, textAlign: 'center' }}>
+            {serviceName} on {formatDate(dateStr)} at {formatTime(selectedSlot!)}
+          </Text>
+          <TouchableOpacity
+            style={[styles.bookBtn, { marginTop: SPACING.xxxl, width: '100%' }]}
+            onPress={() => router.replace('/(tabs)/bookings')}
+          >
+            <Text style={styles.bookBtnText}>View My Bookings</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={{ marginTop: SPACING.lg }}
+            onPress={() => router.replace('/(tabs)/home')}
+          >
+            <Text style={{ fontSize: FONT_SIZE.base, color: COLORS.blue, fontWeight: '500' }}>Back to Home</Text>
+          </TouchableOpacity>
+        </View>
+        <BottomNav />
+      </>
     );
   }
 
   return (
+    <>
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {/* Pharmacy */}
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: SPACING.sm }}>
@@ -115,6 +130,17 @@ export default function SelectTimeScreen() {
       </View>
 
       <Text style={styles.serviceName}>{serviceName}</Text>
+
+      {/* Current booking info for reschedule */}
+      {isReschedule && currentDate && currentTime && (
+        <View style={{ backgroundColor: COLORS.amberBg, borderRadius: RADIUS.sm, padding: SPACING.md, marginBottom: SPACING.lg, borderLeftWidth: 3, borderLeftColor: COLORS.amber }}>
+          <Text style={{ fontSize: FONT_SIZE.sm, fontWeight: '600', color: COLORS.amber }}>Current booking</Text>
+          <Text style={{ fontSize: FONT_SIZE.sm, color: COLORS.slate600, marginTop: 2 }}>
+            {formatDate(currentDate)} at {formatTime(currentTime)}
+          </Text>
+          <Text style={{ fontSize: FONT_SIZE.xs, color: COLORS.slate400, marginTop: 4 }}>Select a new date and time below</Text>
+        </View>
+      )}
 
       {/* Error */}
       {bookError ? (
@@ -167,11 +193,13 @@ export default function SelectTimeScreen() {
           disabled={booking}
         >
           {booking ? <ActivityIndicator color={COLORS.white} /> : (
-            <Text style={styles.bookBtnText}>Confirm Booking</Text>
+            <Text style={styles.bookBtnText}>{isReschedule ? 'Confirm Reschedule' : 'Confirm Booking'}</Text>
           )}
         </TouchableOpacity>
       )}
     </ScrollView>
+    <BottomNav />
+    </>
   );
 }
 

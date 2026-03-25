@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Alert, Linking } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Alert, Platform, Modal } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { useAuthStore } from '../../src/store/authStore';
@@ -7,49 +7,70 @@ import { getBookingDetails, cancelBooking } from '../../src/api/services';
 import { formatDate, formatTime, getStatusColor, getStatusBgColor } from '../../src/utils/formatting';
 import { COLORS, SPACING, FONT_SIZE, RADIUS } from '../../src/utils/constants';
 import type { Booking } from '../../src/types';
+import BottomNav from '../../src/components/BottomNav';
 
 export default function BookingDetailScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, refresh } = useLocalSearchParams<{ id: string; refresh?: string }>();
   const router = useRouter();
-  const { token } = useAuthStore();
+  const { token, organization } = useAuthStore();
   const [booking, setBooking] = useState<Booking | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+  const [cancelled, setCancelled] = useState(false);
 
   useEffect(() => {
     if (id && token) {
+      setLoading(true);
       getBookingDetails(token, id).then(setBooking).catch(() => {}).finally(() => setLoading(false));
     }
-  }, [id, token]);
+  }, [id, token, refresh]);
+
+  const doCancel = async () => {
+    setCancelling(true);
+    setShowCancelModal(false);
+    try {
+      await cancelBooking(token!, id!, 'Cancelled by patient', organization);
+      setCancelled(true);
+      setBooking((prev) => prev ? { ...prev, status: 'Cancelled' } : prev);
+    } catch (err: any) {
+      if (Platform.OS === 'web') {
+        alert(err?.response?.data?.message || 'Failed to cancel');
+      } else {
+        Alert.alert('Error', err?.response?.data?.message || 'Failed to cancel');
+      }
+    } finally {
+      setCancelling(false);
+    }
+  };
 
   const handleCancel = () => {
-    Alert.alert('Cancel Booking', 'Are you sure you want to cancel this booking?', [
-      { text: 'No', style: 'cancel' },
-      {
-        text: 'Yes, Cancel', style: 'destructive',
-        onPress: async () => {
-          try {
-            await cancelBooking(token!, id!);
-            Alert.alert('Cancelled', 'Your booking has been cancelled');
-            router.back();
-          } catch (err: any) {
-            Alert.alert('Error', err?.response?.data?.message || 'Failed to cancel');
-          }
-        },
-      },
-    ]);
+    if (Platform.OS === 'web') {
+      setShowCancelModal(true);
+    } else {
+      Alert.alert('Cancel Booking', 'Are you sure you want to cancel this booking?', [
+        { text: 'No', style: 'cancel' },
+        { text: 'Yes, Cancel', style: 'destructive', onPress: doCancel },
+      ]);
+    }
   };
 
   if (loading) {
-    return <View style={styles.center}><ActivityIndicator size="large" color={COLORS.navy} /></View>;
+    return <View style={styles.center}><ActivityIndicator size="large" color={COLORS.primary} /></View>;
   }
 
   if (!booking) {
     return <View style={styles.center}><Text>Booking not found</Text></View>;
   }
 
-  const isUpcoming = new Date(booking.booking_date) >= new Date() && booking.status !== 'Cancelled';
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const bDate = new Date(booking.booking_date);
+  bDate.setHours(0, 0, 0, 0);
+  const isUpcoming = bDate >= today && booking.status !== 'Cancelled';
 
   return (
+    <>
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {/* Status */}
       <View style={[styles.statusBar, { backgroundColor: getStatusBgColor(booking.status) }]}>
@@ -109,14 +130,81 @@ export default function BookingDetailScreen() {
         )}
       </View>
 
-      {/* Actions */}
-      {isUpcoming && (
-        <TouchableOpacity style={styles.cancelBtn} onPress={handleCancel} activeOpacity={0.7}>
-          <Feather name="x" size={18} color={COLORS.red} />
-          <Text style={styles.cancelText}>Cancel Booking</Text>
+      {/* Cancelled banner */}
+      {cancelled && (
+        <View style={{ backgroundColor: COLORS.greenBg, borderRadius: RADIUS.sm, padding: SPACING.md, marginBottom: SPACING.lg, borderLeftWidth: 3, borderLeftColor: COLORS.green }}>
+          <Text style={{ color: COLORS.green, fontSize: FONT_SIZE.sm, fontWeight: '600' }}>Booking cancelled successfully</Text>
+        </View>
+      )}
+
+      {/* Pre-Screening Questionnaire */}
+      {isUpcoming && !cancelled && (booking as any).pre_screening_questionnaire && !(booking as any).prescreening_completed && !(booking as any).prescreening_completed_by_patient && (
+        <TouchableOpacity
+          style={styles.questionnaireBtn}
+          onPress={() => router.push(`/questionnaire/${booking.name}`)}
+          activeOpacity={0.7}
+        >
+          <Feather name="clipboard" size={18} color={COLORS.white} />
+          <Text style={styles.questionnaireBtnText}>Complete Pre-Screening</Text>
         </TouchableOpacity>
       )}
+
+      {/* Completed badge */}
+      {((booking as any).prescreening_completed === 1 || (booking as any).prescreening_completed_by_patient === 1) && (
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: COLORS.greenBg, paddingHorizontal: SPACING.md, paddingVertical: SPACING.sm, borderRadius: RADIUS.sm, marginBottom: SPACING.md }}>
+          <Feather name="check-circle" size={14} color={COLORS.green} />
+          <Text style={{ fontSize: FONT_SIZE.sm, color: COLORS.green, fontWeight: '500' }}>Pre-screening completed</Text>
+        </View>
+      )}
+
+      {/* Actions */}
+      {isUpcoming && !cancelled && (
+        <View style={{ gap: SPACING.md }}>
+          <TouchableOpacity
+            style={styles.rescheduleBtn}
+            onPress={() => router.push({
+              pathname: '/booking/select-time',
+              params: {
+                serviceId: booking.service,
+                serviceName: booking.service_name,
+                rescheduleId: booking.name,
+                currentDate: booking.booking_date,
+                currentTime: String(booking.booking_time).substring(0, 5),
+              }
+            })}
+            activeOpacity={0.7}
+          >
+            <Feather name="calendar" size={18} color={COLORS.primary} />
+            <Text style={styles.rescheduleText}>Reschedule</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.cancelBtn} onPress={handleCancel} disabled={cancelling} activeOpacity={0.7}>
+            {cancelling ? <ActivityIndicator size="small" color={COLORS.red} /> : <Feather name="x" size={18} color={COLORS.red} />}
+            <Text style={styles.cancelText}>{cancelling ? 'Cancelling...' : 'Cancel Booking'}</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {/* Cancel Confirmation Modal (web) */}
+      <Modal visible={showCancelModal} transparent animationType="fade">
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: SPACING.xxl }}>
+          <View style={{ backgroundColor: COLORS.white, borderRadius: RADIUS.lg, padding: SPACING.xxl, width: '100%', maxWidth: 340 }}>
+            <Feather name="alert-circle" size={32} color={COLORS.red} style={{ alignSelf: 'center', marginBottom: SPACING.md }} />
+            <Text style={{ fontSize: FONT_SIZE.lg, fontWeight: '700', color: COLORS.slate900, textAlign: 'center', marginBottom: SPACING.sm }}>Cancel Booking</Text>
+            <Text style={{ fontSize: FONT_SIZE.base, color: COLORS.slate500, textAlign: 'center', marginBottom: SPACING.xxl }}>Are you sure you want to cancel this booking?</Text>
+            <View style={{ flexDirection: 'row', gap: SPACING.md }}>
+              <TouchableOpacity style={{ flex: 1, paddingVertical: 12, borderRadius: RADIUS.sm, borderWidth: 1, borderColor: COLORS.slate200, alignItems: 'center' }} onPress={() => setShowCancelModal(false)}>
+                <Text style={{ fontSize: FONT_SIZE.base, fontWeight: '600', color: COLORS.slate600 }}>No, Keep It</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={{ flex: 1, paddingVertical: 12, borderRadius: RADIUS.sm, backgroundColor: COLORS.red, alignItems: 'center' }} onPress={doCancel}>
+                <Text style={{ fontSize: FONT_SIZE.base, fontWeight: '600', color: COLORS.white }}>Yes, Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
+    <BottomNav />
+    </>
   );
 }
 
@@ -139,6 +227,16 @@ const styles = StyleSheet.create({
   detailRow: { flexDirection: 'row', alignItems: 'center', gap: SPACING.md },
   detailLabel: { fontSize: FONT_SIZE.xs, color: COLORS.slate400 },
   detailValue: { fontSize: FONT_SIZE.base, fontWeight: '500', color: COLORS.slate800 },
+  questionnaireBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: SPACING.sm,
+    backgroundColor: COLORS.primary, borderRadius: RADIUS.md, paddingVertical: 14, marginBottom: SPACING.md,
+  },
+  questionnaireBtnText: { fontSize: FONT_SIZE.base, fontWeight: '600', color: COLORS.white },
+  rescheduleBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: SPACING.sm,
+    borderWidth: 1, borderColor: COLORS.primary, borderRadius: RADIUS.md, paddingVertical: 14,
+  },
+  rescheduleText: { fontSize: FONT_SIZE.base, fontWeight: '600', color: COLORS.primary },
   cancelBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: SPACING.sm,
     borderWidth: 1, borderColor: '#fca5a5', borderRadius: RADIUS.md, paddingVertical: 14,
