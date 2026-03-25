@@ -18,7 +18,8 @@
       "bundleIdentifier": "uk.co.rxsure.patient",
       "infoPlist": {
         "NSFaceIDUsageDescription": "Use Face ID to login quickly and securely",
-        "NSCameraUsageDescription": "Take photos for your profile or medical documents"
+        "NSCameraUsageDescription": "Take photos for questionnaire responses",
+        "NSPhotoLibraryUsageDescription": "Upload images for questionnaire responses"
       }
     },
     "android": {
@@ -31,6 +32,9 @@
         "USE_BIOMETRIC",
         "USE_FINGERPRINT",
         "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "READ_MEDIA_IMAGES",
+        "READ_MEDIA_VIDEO",
         "RECEIVE_BOOT_COMPLETED",
         "VIBRATE"
       ]
@@ -44,12 +48,20 @@
       "expo-router",
       "expo-secure-store",
       [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow RxSure to access your photos for questionnaire uploads",
+          "cameraPermission": "Allow RxSure to take photos for questionnaire uploads"
+        }
+      ],
+      [
         "expo-local-authentication",
         {
           "faceIDPermission": "Allow RxSure to use Face ID for quick login"
         }
       ],
-      "expo-font"
+      "expo-font",
+      "@react-native-community/datetimepicker"
     ],
     "experiments": {
       "typedRoutes": true
