@@ -4,7 +4,7 @@ import type { Service, TimeSlot, Booking, Questionnaire, Branding } from '../typ
 const API = 'consultation.consultation.api.patient_api';
 
 // ─── Services ────────────────────────────────────────────
-export async function getServices(businessId: string): Promise<Service[]> {
+export async function getServices(businessId: string): Promise<any> {
   return frappeClient.call(`${API}.get_services`, { business_id: businessId });
 }
 
@@ -124,7 +124,7 @@ export async function submitPreScreeningAnswers(data: {
 
 // ─── Auth ────────────────────────────────────────────────
 export async function loginPatient(email: string, password: string, organization: string) {
-  return frappeClient.call(`${API}.login`, { email, password, organization });
+  return frappeClient.call(`${API}.login`, { usr: email, pwd: password, organization });
 }
 
 export async function registerPatient(data: any) {

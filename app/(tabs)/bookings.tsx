@@ -35,19 +35,33 @@ export default function BookingsScreen() {
     setRefreshing(false);
   };
 
-  const now = new Date();
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
   const filtered = bookings.filter((b) => {
     const bDate = new Date(b.booking_date);
-    if (tab === 'upcoming') return bDate >= now && b.status !== 'Cancelled';
-    return bDate < now || b.status === 'Cancelled';
+    bDate.setHours(0, 0, 0, 0);
+    if (tab === 'upcoming') return bDate >= today && b.status !== 'Cancelled';
+    return bDate < today || b.status === 'Cancelled';
   });
 
+  if (!token) {
+    return (
+      <View style={styles.center}>
+        <Text style={{ fontSize: FONT_SIZE.md, color: COLORS.slate500 }}>Please login to view bookings</Text>
+      </View>
+    );
+  }
+
   if (loading) {
-    return <View style={styles.center}><ActivityIndicator size="large" color={COLORS.navy} /></View>;
+    return <View style={styles.center}><ActivityIndicator size="large" color={COLORS.primary} /></View>;
   }
 
   return (
     <View style={styles.container}>
+      <View style={styles.pharmacyBanner}>
+        <Feather name="home" size={14} color={COLORS.primary} />
+        <Text style={styles.pharmacyText}>RxSure Pharmacy</Text>
+      </View>
       <View style={styles.tabs}>
         <TouchableOpacity
           style={[styles.tabBtn, tab === 'upcoming' && styles.tabActive]}
@@ -106,6 +120,13 @@ export default function BookingsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.slate50 },
+  pharmacyBanner: {
+    flexDirection: 'row', alignItems: 'center', gap: SPACING.sm,
+    backgroundColor: COLORS.primaryBg, marginHorizontal: SPACING.lg, marginTop: SPACING.sm,
+    paddingHorizontal: SPACING.md, paddingVertical: SPACING.sm, borderRadius: RADIUS.sm,
+    borderLeftWidth: 3, borderLeftColor: COLORS.primary,
+  },
+  pharmacyText: { fontSize: FONT_SIZE.sm, fontWeight: '600', color: COLORS.primary },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   tabs: { flexDirection: 'row', padding: SPACING.lg, gap: SPACING.sm },
   tabBtn: { flex: 1, paddingVertical: SPACING.md, alignItems: 'center', borderRadius: RADIUS.sm, backgroundColor: COLORS.white },

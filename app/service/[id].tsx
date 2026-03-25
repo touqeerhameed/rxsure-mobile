@@ -33,6 +33,12 @@ export default function ServiceDetailScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      {/* Pharmacy */}
+      <View style={styles.pharmacyRow}>
+        <Feather name="home" size={13} color={COLORS.primary} />
+        <Text style={styles.pharmacyText}>RxSure Pharmacy</Text>
+      </View>
+
       <Text style={styles.title}>{service.service_name}</Text>
 
       <View style={styles.metaRow}>
@@ -82,6 +88,8 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.white },
   content: { padding: SPACING.xxl },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  pharmacyRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: SPACING.sm },
+  pharmacyText: { fontSize: FONT_SIZE.sm, color: COLORS.primary, fontWeight: '500' },
   title: { fontSize: FONT_SIZE.xxl, fontWeight: '700', color: COLORS.slate900, marginBottom: SPACING.md },
   metaRow: { flexDirection: 'row', gap: SPACING.md, marginBottom: SPACING.xxl },
   metaChip: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: COLORS.slate100, paddingHorizontal: SPACING.md, paddingVertical: SPACING.sm, borderRadius: RADIUS.full },

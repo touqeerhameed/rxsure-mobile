@@ -43,11 +43,15 @@ export default function SelectTimeScreen() {
     }
   };
 
+  const [booked, setBooked] = useState(false);
+  const [bookError, setBookError] = useState('');
+
   const handleBook = async () => {
     if (!selectedSlot || !token) return;
     setBooking(true);
+    setBookError('');
     try {
-      await createBooking({
+      const result = await createBooking({
         service_id: serviceId!,
         booking_date: dateStr,
         booking_time: selectedSlot,
@@ -55,11 +59,19 @@ export default function SelectTimeScreen() {
         patient_id: (patient as any)?.id || patient?.name,
         delivery_type: 'In Person',
       });
-      Alert.alert('Booked!', `Your ${serviceName} appointment is confirmed for ${formatDate(dateStr)} at ${formatTime(selectedSlot)}`, [
-        { text: 'View Bookings', onPress: () => router.replace('/(tabs)/bookings') },
-      ]);
+      if ((result as any)?.success === false) {
+        setBookError((result as any)?.error || 'Booking failed');
+        setBooking(false);
+        return;
+      }
+      setBooked(true);
     } catch (err: any) {
-      Alert.alert('Error', err?.response?.data?.message || 'Booking failed');
+      const msg = err?.response?.data?._server_messages;
+      let errorMsg = err?.response?.data?.message || 'Booking failed';
+      if (msg) {
+        try { errorMsg = JSON.parse(JSON.parse(msg)[0]).message; } catch {}
+      }
+      setBookError(errorMsg);
     } finally {
       setBooking(false);
     }
@@ -67,9 +79,49 @@ export default function SelectTimeScreen() {
 
   const availableSlots = slots.filter((s: any) => s.available !== false && s.is_available !== false);
 
+  // Success screen
+  if (booked) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center', padding: SPACING.xxl }]}>
+        <Feather name="check-circle" size={64} color={COLORS.primary} />
+        <Text style={{ fontSize: FONT_SIZE.xxl, fontWeight: '700', color: COLORS.slate900, marginTop: SPACING.xl, textAlign: 'center' }}>
+          Booking Confirmed!
+        </Text>
+        <Text style={{ fontSize: FONT_SIZE.base, color: COLORS.slate500, marginTop: SPACING.sm, textAlign: 'center' }}>
+          {serviceName} on {formatDate(dateStr)} at {formatTime(selectedSlot!)}
+        </Text>
+        <TouchableOpacity
+          style={[styles.bookBtn, { marginTop: SPACING.xxxl, width: '100%' }]}
+          onPress={() => router.replace('/(tabs)/bookings')}
+        >
+          <Text style={styles.bookBtnText}>View My Bookings</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={{ marginTop: SPACING.lg }}
+          onPress={() => router.replace('/(tabs)/home')}
+        >
+          <Text style={{ fontSize: FONT_SIZE.base, color: COLORS.blue, fontWeight: '500' }}>Back to Home</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      {/* Pharmacy */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: SPACING.sm }}>
+        <Feather name="home" size={13} color={COLORS.primary} />
+        <Text style={{ fontSize: FONT_SIZE.sm, color: COLORS.primary, fontWeight: '500' }}>RxSure Pharmacy</Text>
+      </View>
+
       <Text style={styles.serviceName}>{serviceName}</Text>
+
+      {/* Error */}
+      {bookError ? (
+        <View style={{ backgroundColor: COLORS.redBg, borderRadius: RADIUS.sm, padding: SPACING.md, marginBottom: SPACING.lg, borderLeftWidth: 3, borderLeftColor: COLORS.red }}>
+          <Text style={{ color: COLORS.red, fontSize: FONT_SIZE.sm }}>{bookError}</Text>
+        </View>
+      ) : null}
 
       {/* Date Picker */}
       <View style={styles.datePicker}>

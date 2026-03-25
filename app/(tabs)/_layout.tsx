@@ -1,8 +1,20 @@
-import { Tabs } from 'expo-router';
+import { Redirect, Tabs } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
+import { useAuthStore } from '../../src/store/authStore';
 import { COLORS } from '../../src/utils/constants';
 
 export default function TabLayout() {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const isLoading = useAuthStore((s) => s.isLoading);
+
+  // Don't redirect while still checking auth
+  if (isLoading) return null;
+
+  // If not authenticated, redirect to login flow
+  if (!isAuthenticated) {
+    return <Redirect href="/select-pharmacy" />;
+  }
+
   return (
     <Tabs
       screenOptions={{

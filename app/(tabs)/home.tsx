@@ -22,8 +22,14 @@ export default function HomeScreen() {
     try {
       const patientId = (patient as any)?.id || patient?.name;
       const bookingsList = await getPatientBookings(token, organization, patientId);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
       const upcoming = (bookingsList)
-        .filter((b: Booking) => b.status !== 'Cancelled' && new Date(b.booking_date) >= new Date())
+        .filter((b: Booking) => {
+          const bDate = new Date(b.booking_date);
+          bDate.setHours(0, 0, 0, 0);
+          return b.status !== 'Cancelled' && bDate >= today;
+        })
         .sort((a: Booking, b: Booking) => new Date(a.booking_date).getTime() - new Date(b.booking_date).getTime())
         .slice(0, 3);
       setUpcomingBookings(upcoming);

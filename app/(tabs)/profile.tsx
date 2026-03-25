@@ -1,4 +1,5 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Platform, Modal } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { useAuthStore } from '../../src/store/authStore';
@@ -7,19 +8,25 @@ import { COLORS, SPACING, FONT_SIZE, RADIUS } from '../../src/utils/constants';
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { patient, logout } = useAuthStore();
+  const { patient, logout, setOrganization } = useAuthStore();
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+  const doLogout = async () => {
+    setShowLogoutModal(false);
+    await logout();
+    setOrganization('');
+    router.replace('/select-pharmacy');
+  };
 
   const handleLogout = () => {
-    Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Sign Out', style: 'destructive',
-        onPress: async () => {
-          await logout();
-          router.replace('/login');
-        },
-      },
-    ]);
+    if (Platform.OS === 'web') {
+      setShowLogoutModal(true);
+    } else {
+      Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Sign Out', style: 'destructive', onPress: doLogout },
+      ]);
+    }
   };
 
   const initials = getPatientInitials(patient?.first_name, patient?.last_name);
@@ -35,6 +42,10 @@ export default function ProfileScreen() {
           {formatPatientName(patient?.first_name, patient?.middle_name, patient?.last_name)}
         </Text>
         {patient?.email && <Text style={styles.email}>{patient.email}</Text>}
+        <View style={styles.pharmacyChip}>
+          <Feather name="home" size={12} color={COLORS.primary} />
+          <Text style={styles.pharmacyChipText}>RxSure Pharmacy</Text>
+        </View>
       </View>
 
       {/* Info Section */}
@@ -83,6 +94,25 @@ export default function ProfileScreen() {
       </TouchableOpacity>
 
       <Text style={styles.version}>RxSure v1.0.0</Text>
+
+      {/* Logout Confirmation Modal */}
+      <Modal visible={showLogoutModal} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalBox}>
+            <Feather name="log-out" size={32} color={COLORS.red} style={{ alignSelf: 'center', marginBottom: SPACING.md }} />
+            <Text style={styles.modalTitle}>Sign Out</Text>
+            <Text style={styles.modalText}>Are you sure you want to sign out?</Text>
+            <View style={styles.modalButtons}>
+              <TouchableOpacity style={styles.modalCancel} onPress={() => setShowLogoutModal(false)}>
+                <Text style={styles.modalCancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.modalConfirm} onPress={doLogout}>
+                <Text style={styles.modalConfirmText}>Sign Out</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 }
@@ -102,6 +132,12 @@ const styles = StyleSheet.create({
   avatarText: { fontSize: FONT_SIZE.xxl, fontWeight: '700', color: COLORS.white },
   name: { fontSize: FONT_SIZE.lg, fontWeight: '700', color: COLORS.slate900 },
   email: { fontSize: FONT_SIZE.sm, color: COLORS.slate400, marginTop: 2 },
+  pharmacyChip: {
+    flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: SPACING.md,
+    backgroundColor: COLORS.primaryBg, paddingHorizontal: SPACING.md, paddingVertical: 5,
+    borderRadius: RADIUS.full,
+  },
+  pharmacyChipText: { fontSize: FONT_SIZE.xs, fontWeight: '500', color: COLORS.primary },
   section: {
     backgroundColor: COLORS.white, borderRadius: RADIUS.md, padding: SPACING.lg,
     marginBottom: SPACING.lg,
@@ -119,4 +155,13 @@ const styles = StyleSheet.create({
   },
   logoutText: { fontSize: FONT_SIZE.base, fontWeight: '600', color: COLORS.red },
   version: { textAlign: 'center', fontSize: FONT_SIZE.xs, color: COLORS.slate400, marginBottom: 40 },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: SPACING.xxl },
+  modalBox: { backgroundColor: COLORS.white, borderRadius: RADIUS.lg, padding: SPACING.xxl, width: '100%', maxWidth: 340 },
+  modalTitle: { fontSize: FONT_SIZE.lg, fontWeight: '700', color: COLORS.slate900, textAlign: 'center', marginBottom: SPACING.sm },
+  modalText: { fontSize: FONT_SIZE.base, color: COLORS.slate500, textAlign: 'center', marginBottom: SPACING.xxl },
+  modalButtons: { flexDirection: 'row', gap: SPACING.md },
+  modalCancel: { flex: 1, paddingVertical: 12, borderRadius: RADIUS.sm, borderWidth: 1, borderColor: COLORS.slate200, alignItems: 'center' },
+  modalCancelText: { fontSize: FONT_SIZE.base, fontWeight: '600', color: COLORS.slate600 },
+  modalConfirm: { flex: 1, paddingVertical: 12, borderRadius: RADIUS.sm, backgroundColor: COLORS.red, alignItems: 'center' },
+  modalConfirmText: { fontSize: FONT_SIZE.base, fontWeight: '600', color: COLORS.white },
 });

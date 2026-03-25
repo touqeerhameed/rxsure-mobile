@@ -59,6 +59,20 @@ export default function BookingDetailScreen() {
       {/* Service */}
       <Text style={styles.serviceName}>{booking.service_name}</Text>
 
+      {/* Pharmacy */}
+      <View style={styles.pharmacyCard}>
+        <Feather name="home" size={18} color={COLORS.primary} />
+        <View style={{ flex: 1 }}>
+          <Text style={styles.pharmacyName}>{(booking as any).organization_name || 'RxSure Pharmacy'}</Text>
+          {(booking as any).organization_address ? (
+            <Text style={styles.pharmacyAddress}>{(booking as any).organization_address}</Text>
+          ) : null}
+          {(booking as any).organization_phone ? (
+            <Text style={styles.pharmacyPhone}>{(booking as any).organization_phone}</Text>
+          ) : null}
+        </View>
+      </View>
+
       {/* Details */}
       <View style={styles.detailCard}>
         <View style={styles.detailRow}>
@@ -86,7 +100,7 @@ export default function BookingDetailScreen() {
         )}
         {booking.pharmacist_name && (
           <View style={styles.detailRow}>
-            <Feather name="phone" size={18} color={COLORS.slate400} />
+            <Feather name="user" size={18} color={COLORS.slate400} />
             <View>
               <Text style={styles.detailLabel}>Pharmacist</Text>
               <Text style={styles.detailValue}>{booking.pharmacist_name}</Text>
@@ -112,7 +126,15 @@ const styles = StyleSheet.create({
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   statusBar: { alignSelf: 'flex-start', paddingHorizontal: SPACING.lg, paddingVertical: SPACING.sm, borderRadius: RADIUS.full, marginBottom: SPACING.lg },
   statusText: { fontSize: FONT_SIZE.sm, fontWeight: '600' },
-  serviceName: { fontSize: FONT_SIZE.xxl, fontWeight: '700', color: COLORS.slate900, marginBottom: SPACING.xxl },
+  serviceName: { fontSize: FONT_SIZE.xxl, fontWeight: '700', color: COLORS.slate900, marginBottom: SPACING.lg },
+  pharmacyCard: {
+    flexDirection: 'row', alignItems: 'flex-start', gap: SPACING.md,
+    backgroundColor: COLORS.primaryBg, borderRadius: RADIUS.md, padding: SPACING.lg,
+    marginBottom: SPACING.lg, borderLeftWidth: 3, borderLeftColor: COLORS.primary,
+  },
+  pharmacyName: { fontSize: FONT_SIZE.base, fontWeight: '600', color: COLORS.slate800 },
+  pharmacyAddress: { fontSize: FONT_SIZE.sm, color: COLORS.slate500, marginTop: 2 },
+  pharmacyPhone: { fontSize: FONT_SIZE.sm, color: COLORS.primary, marginTop: 2 },
   detailCard: { backgroundColor: COLORS.slate50, borderRadius: RADIUS.md, padding: SPACING.lg, gap: SPACING.lg, marginBottom: SPACING.xxl },
   detailRow: { flexDirection: 'row', alignItems: 'center', gap: SPACING.md },
   detailLabel: { fontSize: FONT_SIZE.xs, color: COLORS.slate400 },
