@@ -7,6 +7,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import * as SplashScreen from 'expo-splash-screen';
 import { queryClient } from '../src/lib/queryClient';
 import { useAuthStore } from '../src/store/authStore';
+import { useInactivityTimeout } from '../src/hooks/useInactivityTimeout';
 import { COLORS } from '../src/utils/constants';
 
 SplashScreen.preventAutoHideAsync();
@@ -20,6 +21,8 @@ export default function RootLayout() {
       SplashScreen.hideAsync();
     });
   }, []);
+
+  useInactivityTimeout();
 
   if (isLoading) return null;
 
@@ -50,6 +53,7 @@ export default function RootLayout() {
           <Stack.Screen name="booking/[id]" options={{ title: 'Booking Details' }} />
           <Stack.Screen name="questionnaire/[bookingId]" options={{ title: 'Pre-Screening' }} />
           <Stack.Screen name="settings" options={{ title: 'Settings' }} />
+          <Stack.Screen name="change-password" options={{ title: 'Change Password' }} />
           <Stack.Screen name="help" options={{ title: 'Help & Support' }} />
           <Stack.Screen name="help/tickets" options={{ title: 'Support Tickets' }} />
           <Stack.Screen name="help/submit-ticket" options={{ title: 'New Ticket' }} />

@@ -1,15 +1,25 @@
-import { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Platform, Modal, Image } from 'react-native';
+import { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Platform, Modal, Image, Linking } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { useAuthStore } from '../../src/store/authStore';
+import { getBusinessBranding } from '../../src/api/services';
 import { formatPatientName, getPatientInitials } from '../../src/utils/formatting';
 import { COLORS, SPACING, FONT_SIZE, RADIUS } from '../../src/utils/constants';
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { patient, logout, setOrganization } = useAuthStore();
+  const { patient, logout, setOrganization, organization } = useAuthStore();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [branding, setBranding] = useState<any>(null);
+
+  useEffect(() => {
+    if (organization) {
+      getBusinessBranding(organization).then((res: any) => {
+        setBranding(res?.branding || res);
+      }).catch(() => {});
+    }
+  }, [organization]);
 
   const doLogout = async () => {
     setShowLogoutModal(false);
@@ -103,15 +113,25 @@ export default function ProfileScreen() {
           <Text style={styles.menuText}>Help & Support</Text>
           <Feather name="chevron-right" size={16} color={COLORS.slate300} />
         </TouchableOpacity>
+        <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/change-password')} activeOpacity={0.7}>
+          <Feather name="key" size={18} color={COLORS.slate600} />
+          <Text style={styles.menuText}>Change Password</Text>
+          <Feather name="chevron-right" size={16} color={COLORS.slate300} />
+        </TouchableOpacity>
         <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/settings')} activeOpacity={0.7}>
           <Feather name="settings" size={18} color={COLORS.slate600} />
           <Text style={styles.menuText}>Settings</Text>
           <Feather name="chevron-right" size={16} color={COLORS.slate300} />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.menuItem} activeOpacity={0.7}>
-          <Feather name="shield" size={18} color={COLORS.slate600} />
-          <Text style={styles.menuText}>Privacy & Security</Text>
-          <Feather name="chevron-right" size={16} color={COLORS.slate300} />
+        <TouchableOpacity style={styles.menuItem} onPress={() => Linking.openURL(branding?.privacy_url || 'https://rxsure.co.uk/privacy-policy/')} activeOpacity={0.7}>
+          <Feather name="lock" size={18} color={COLORS.slate600} />
+          <Text style={styles.menuText}>Privacy Policy</Text>
+          <Feather name="external-link" size={14} color={COLORS.slate300} />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.menuItem} onPress={() => Linking.openURL(branding?.terms_url || 'https://rxsure.co.uk/terms-of-service')} activeOpacity={0.7}>
+          <Feather name="file-text" size={18} color={COLORS.slate600} />
+          <Text style={styles.menuText}>Terms & Conditions</Text>
+          <Feather name="external-link" size={14} color={COLORS.slate300} />
         </TouchableOpacity>
       </View>
 

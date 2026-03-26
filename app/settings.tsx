@@ -1,13 +1,24 @@
-import { View, Text, StyleSheet, Switch, ScrollView, Alert, Platform } from 'react-native';
+import { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, Switch, ScrollView, Alert, Platform, TouchableOpacity, Linking } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useBiometric } from '../src/hooks/useBiometric';
 import { useSettingsStore } from '../src/store/settingsStore';
+import { useAuthStore } from '../src/store/authStore';
+import { getBusinessBranding } from '../src/api/services';
 import { COLORS, SPACING, FONT_SIZE, RADIUS } from '../src/utils/constants';
 import BottomNav from '../src/components/BottomNav';
 
 export default function SettingsScreen() {
   const { isAvailable, isEnabled, biometricType, enableBiometric, disableBiometric } = useBiometric();
   const { notificationsEnabled, setNotificationsEnabled } = useSettingsStore();
+  const { organization } = useAuthStore();
+  const [branding, setBranding] = useState<any>(null);
+
+  useEffect(() => {
+    if (organization) {
+      getBusinessBranding(organization).then((res: any) => setBranding(res?.branding || res)).catch(() => {});
+    }
+  }, [organization]);
 
   const toggleBiometric = async (value: boolean) => {
     if (value) {
@@ -68,6 +79,31 @@ export default function SettingsScreen() {
             thumbColor={COLORS.white}
           />
         </View>
+      </View>
+
+      {/* Legal */}
+      <Text style={styles.sectionTitle}>Legal</Text>
+      <View style={styles.card}>
+        <TouchableOpacity style={styles.settingRow} onPress={() => Linking.openURL(branding?.privacy_url || 'https://rxsure.co.uk/privacy-policy/')}>
+          <View style={styles.settingLeft}>
+            <Feather name="lock" size={20} color={COLORS.navy} />
+            <View>
+              <Text style={styles.settingLabel}>Privacy Policy</Text>
+              <Text style={styles.settingDesc}>How we handle your data</Text>
+            </View>
+          </View>
+          <Feather name="external-link" size={16} color={COLORS.slate400} />
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.settingRow, { borderTopWidth: 1, borderTopColor: COLORS.slate100 }]} onPress={() => Linking.openURL(branding?.terms_url || 'https://rxsure.co.uk/terms-of-service')}>
+          <View style={styles.settingLeft}>
+            <Feather name="file-text" size={20} color={COLORS.navy} />
+            <View>
+              <Text style={styles.settingLabel}>Terms & Conditions</Text>
+              <Text style={styles.settingDesc}>Service usage terms</Text>
+            </View>
+          </View>
+          <Feather name="external-link" size={16} color={COLORS.slate400} />
+        </TouchableOpacity>
       </View>
 
       {/* About */}
